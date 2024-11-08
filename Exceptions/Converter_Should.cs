@@ -13,7 +13,7 @@ public class Converter_Should : ReportingTest<Converter_Should>
 {
     // ReSharper disable once UnusedMember.Global
     #pragma warning disable CA2211 // Non-constant fields should not be visible
-    public static string Names = "ВАШИ ФАМИЛИИ ЧЕРЕЗ ПРОБЕЛ"; // Ivanov Petrov
+    public static string Names = "ОСЛИНА БЕССАРАБ"; // Ivanov Petrov
 
     private MemoryTarget log;
 

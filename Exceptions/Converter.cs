@@ -39,7 +39,14 @@ public class Converter
     private static Settings LoadSettings()
     {
         using var stream = new FileStream("settings.json", FileMode.Open);
-        return JsonSerializer.Deserialize<Settings>(stream);
+        try
+        {
+            return JsonSerializer.Deserialize<Settings>(stream);
+        }
+        catch (Exception e)
+        {
+            throw new JsonException("Не удалось прочитать файл настроек");
+        }
     }
 
     private static void ConvertFile(string filename, Settings settings)
@@ -51,19 +58,19 @@ public class Converter
             log.Info("Source Culture " + Thread.CurrentThread.CurrentCulture.Name);
         }
         IEnumerable<string> lines;
+        lines = PrepareLines(filename);
         try
         {
-            lines = PrepareLines(filename);
+            var convertedLines = lines
+                .Select(ConvertLine)
+                .Select(s => s.Length + " " + s);
+            File.WriteAllLines(filename + ".out", convertedLines);
         }
-        catch
+        catch (Exception e)
         {
-            log.Error($"File {filename} not found");
-            return;
+            //throw new FileNotFoundException();
+            log.Error($"Не удалось сконвертировать {filename}", e);
         }
-        var convertedLines = lines
-            .Select(ConvertLine)
-            .Select(s => s.Length + " " + s);
-        File.WriteAllLines(filename + ".out", convertedLines);
     }
 
     private static IEnumerable<string> PrepareLines(string filename)
@@ -100,17 +107,21 @@ public class Converter
     private static string ConvertAsCharIndexInstruction(string s)
     {
         var parts = s.Split();
-        if (parts.Length < 2) return null;
+        if (parts.Length < 2) 
+            throw new Exception("Некорректная строка");
         var charIndex = int.Parse(parts[0]);
         if ((charIndex < 0) || (charIndex >= parts[1].Length))
-            return null;
+            throw new Exception("Некорректная строка");
         var text = parts[1];
         return text[charIndex].ToString();
     }
 
     private static string ConvertAsDateTime(string arg)
     {
-        return DateTime.Parse(arg).ToString(CultureInfo.InvariantCulture);
+        DateTime date = new DateTime();
+        if (!DateTime.TryParse(arg, out date)) 
+            throw new Exception("Некорректная строка");
+        return date.ToString(CultureInfo.InvariantCulture);
     }
 
     private static string ConvertAsDouble(string arg)
